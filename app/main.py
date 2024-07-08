@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException, status, Response
-from fastapi.params import Body
 from random import randrange
 from pydantic import BaseModel
 
