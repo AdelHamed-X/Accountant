@@ -1,9 +1,19 @@
 from fastapi import FastAPI, HTTPException, status, Response
 from random import randrange
 from pydantic import BaseModel
+import psycopg
+from psycopg.rows import dict_row
 
 
 app = FastAPI()
+
+try:
+    conn = psycopg.connect("host=localhost dbname=fastapi user=postgres password=admin@123")
+    cursor = conn.cursor(row_factory=dict_row)
+    print('Database connection established successfully!')
+except Exception as error:
+    print('Connection to database failed!')
+    print('Error: ', error)
 
 my_posts = [
     {'id': 1, 'title': 'Python', 'content': 'Let\'s learn Python'},
@@ -36,24 +46,34 @@ async def root():
 
 @app.get("/posts")
 def get_all_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    print(posts)
+    return {"data": posts}
 
 
 @app.get("/posts/{id}")
 def get_post(id: int):
-    post = get_p(id)
+    cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
+    post = cursor.fetchone()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": f"post with id: {id} was not found!"})
-    return {"data": f'Here is post {id}'}
+    return {"data": post}
 
 
 @app.post('/createpost', status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
     post_dict = post.dict()
-    post_dict["id"] = randrange(3, 100000)
-    my_posts.append(post_dict)
-    return {"data": f"Title: {post_dict['title']} Content: {post_dict['content']}"}
+
+    id = randrange(2, 1222222)
+    title = post_dict['title']
+    content = post_dict['content']
+
+    cursor.execute(f"""INSERT INTO posts (id, title, content) VALUES ({id}, '{title}', '{content}')""")
+    conn.commit()
+
+    return get_post(id)
 
 
 @app.delete('/deletepost/{id}', status_code=status.HTTP_204_NO_CONTENT)
