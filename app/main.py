@@ -1,14 +1,19 @@
-from fastapi import FastAPI, HTTPException, status, Response
+from fastapi import FastAPI, HTTPException, status, Response, Depends
 from random import randrange
 from pydantic import BaseModel
 import psycopg
 from psycopg.rows import dict_row
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
 
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 try:
-    conn = psycopg.connect("host=localhost dbname=fastapi user=postgres password=admin@123")
+    conn = psycopg.connect("host=localhost dbname=fastapi user=postgres password=admin123")
     cursor = conn.cursor(row_factory=dict_row)
     print('Database connection established successfully!')
 except Exception as error:
@@ -42,6 +47,11 @@ def get_index_post(id: int):
 @app.get('/')
 async def root():
     return {"message": "Hello World"}
+
+
+@app.get('/sqlalchemy')
+def test_posts(db: Session = Depends(get_db)):
+    return {"detail": "Success!"}
 
 
 @app.get("/posts")
