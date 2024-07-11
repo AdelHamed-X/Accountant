@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, Response, Depends
 from random import randrange
-from pydantic import BaseModel
 import psycopg
 from psycopg.rows import dict_row
-from . import models
+from . import models, schema
 from .database import engine, get_db
 from sqlalchemy.orm import Session
 
@@ -24,11 +23,6 @@ my_posts = [
     {'id': 1, 'title': 'Python', 'content': 'Let\'s learn Python'},
     {'id': 2, 'title': 'SQL', 'content': 'Let\'s learn SQL'}
 ]
-
-
-class Post(BaseModel):
-    title: str
-    content: str
 
 
 def get_p(id: int):
@@ -58,31 +52,31 @@ def test_posts(db: Session = Depends(get_db)):
 def get_all_posts():
     cursor.execute("""SELECT * FROM posts""")
     posts = cursor.fetchall()
-    return {"data": posts}
+    return posts
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=schema.PostRespone)
 def get_post(id: int):
     cursor.execute(f"""SELECT * FROM posts WHERE id = {id}""")
     post = cursor.fetchone()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": f"post with id: {id} was not found!"})
-    return {"data": post}
+    return post
 
 
-@app.post('/createpost', status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
+@app.post('/createpost', status_code=status.HTTP_201_CREATED, response_model=schema.PostRespone)
+def create_post(post: schema.CreatePost):
     post_dict = post.dict()
 
     id = randrange(2, 1222222)
     title = post_dict['title']
     content = post_dict['content']
 
-    cursor.execute(f"""INSERT INTO posts (id, title, content) VALUES ({id}, '{title}', '{content}')""")
+    post = cursor.execute(f"""INSERT INTO posts (id, title, content) VALUES ({id}, '{title}', '{content}')""")
     conn.commit()
 
-    return get_post(id)
+    return post
 
 
 @app.delete('/deletepost/{id}', status_code=status.HTTP_204_NO_CONTENT)
@@ -99,8 +93,8 @@ def delete_post(id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/updatepost/{id}')
-def update_post(id: int, post: Post):
+@app.put('/updatepost/{id}', response_model=schema.PostRespone)
+def update_post(id: int, post: schema.CreatePost):
     cursor.execute("SELECT 1 FROM posts WHERE id = %s", (id,))
 
     if cursor.fetchone() is not None:
@@ -113,4 +107,4 @@ def update_post(id: int, post: Post):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": f"post with id: {id} was not found!"})
 
-    return {"data": updated_post}
+    return updated_post
