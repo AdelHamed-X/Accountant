@@ -48,7 +48,6 @@ async def root():
 def get_all_posts():
     cursor.execute("""SELECT * FROM posts""")
     posts = cursor.fetchall()
-    print(posts)
     return {"data": posts}
 
 
@@ -78,27 +77,30 @@ def create_post(post: Post):
 
 @app.delete('/deletepost/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    index = get_index_post(id)
+    cursor.execute("SELECT 1 FROM posts WHERE id = %s", (id,))
 
-    if index is None:
+    if cursor.fetchone() is not None:
+        cursor.execute("DELETE FROM posts WHERE id = %s", (id,))
+        conn.commit()
+    else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id: {id} doesn't exist!")
-
-    my_posts.pop(index)
+                            detail={"message": f"post with id: {id} was not found!"})
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/updatepost/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@app.put('/updatepost/{id}')
 def update_post(id: int, post: Post):
-    index = get_index_post(id)
-    print(index)
-    print(post)
+    cursor.execute("SELECT 1 FROM posts WHERE id = %s", (id,))
 
-    if index is None:
+    if cursor.fetchone() is not None:
+        title = post.dict()['title']
+        content = post.dict()['content']
+        cursor.execute("UPDATE posts SET title = %s, content = %s WHERE id = %s RETURNING *", (title, content, id))
+        updated_post = cursor.fetchone()
+        conn.commit()
+    else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id: {id} was not found!")
+                            detail={"message": f"post with id: {id} was not found!"})
 
-    post_dict = post.dict()
-    post_dict['id'] = id
-    my_posts[index] = post_dict
-    return {"data": post_dict}
+    return {"data": updated_post}
