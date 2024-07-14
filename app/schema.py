@@ -32,3 +32,8 @@ class UserOut(BaseModel):
     email: EmailStr
     id: UUID4
     created_at: datetime
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
