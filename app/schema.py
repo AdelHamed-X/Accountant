@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, UUID4
 from typing import Optional
+from datetime import datetime
 
 
 class BasePost(BaseModel):
@@ -15,4 +16,19 @@ class PostCreate(BasePost):
 
 
 class PostRespone(BasePost):
-    pass
+    published: Optional[bool]
+    id: int
+
+
+class BaseUser(BaseModel):
+    email: EmailStr
+    password: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserOut(BaseModel):
+    email: EmailStr
+    id: UUID4
+    created_at: datetime
