@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, EmailStr, UUID4
 from typing import Optional
 from datetime import datetime
@@ -37,3 +39,12 @@ class UserOut(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    id: Optional[uuid.UUID]
