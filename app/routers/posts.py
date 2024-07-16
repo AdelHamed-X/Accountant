@@ -56,7 +56,6 @@ def delete_post(id: uuid.UUID, db: Session = Depends(get_db),
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# TODO - FIX UPDATE METHOD
 @router.put('/updatepost/{id}', response_model=schema.PostRespone)
 def update_post(id: uuid.UUID, post: schema.PostCreate, db: Session = Depends(get_db),
                 user: schema.TokenData = Depends(oauth2.get_current_user)):
