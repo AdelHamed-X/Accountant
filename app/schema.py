@@ -18,8 +18,10 @@ class PostCreate(BasePost):
 
 
 class PostRespone(BasePost):
+    owner_id: uuid.UUID
     published: Optional[bool]
-    id: int
+    id: uuid.UUID
+    owner: "UserOut"
 
 
 class BaseUser(BaseModel):

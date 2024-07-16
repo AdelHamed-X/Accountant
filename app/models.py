@@ -1,6 +1,6 @@
 import uuid
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, UUID
-from sqlalchemy.sql.expression import null
+from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, UUID
+from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
 
@@ -17,6 +17,9 @@ class Post(BaseModel):
     title = Column(String, nullable=False)
     content = Column(String, nullable=False)
     published = Column(Boolean, server_default="True")
+    owner_id = Column(UUID, ForeignKey("users.id",
+                      ondelete="CASCADE"), nullable=False)
+    owner = relationship("User")
 
 
 class User(BaseModel):
