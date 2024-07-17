@@ -29,3 +29,7 @@ class User(BaseModel):
     password = Column(String, nullable=False)
 
 
+class Vote(BaseModel):
+    __tablename__ = "votes"
+    user_id = Column(UUID, ForeignKey("users.id",  ondelete="CASCADE"), primary_key=True)
+    post_id = Column(UUID, ForeignKey("posts.id",  ondelete="CASCADE"), primary_key=True)
