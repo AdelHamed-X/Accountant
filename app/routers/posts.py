@@ -20,7 +20,7 @@ def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
 
 @router.get("/{id}")
 def get_post(id: uuid.UUID, db: Session = Depends(get_db),
-             user_id: uuid.UUID = Depends(oauth2.get_current_user)):
+             user: schema.TokenData = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

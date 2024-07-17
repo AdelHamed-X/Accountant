@@ -1,7 +1,7 @@
 import uuid
 
 from pydantic import BaseModel, EmailStr, UUID4
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime
 
 
@@ -50,3 +50,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[uuid.UUID]
+
+
+class Vote(BaseModel):
+    post_id: UUID4
+    dir: Literal[0, 1]
