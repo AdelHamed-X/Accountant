@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Depends
-from . import models
-from .database import engine, get_db
+from fastapi import FastAPI
+from . import models, config
+from .database import engine
 from app.routers import posts, users, auth
 
-
+setting = config.Setting()
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
