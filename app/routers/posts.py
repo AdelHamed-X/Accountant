@@ -14,8 +14,6 @@ router = APIRouter(
 @router.get("/", response_model=List[schema.PostRespone])
 def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
                   skip: int = 0, search: Optional[str] = ""):
-    print(skip, limit)
-    print(search)
     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
 
@@ -45,10 +43,10 @@ def create_post(post: schema.PostCreate, db: Session = Depends(get_db),
 @router.delete('/deletepost/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: uuid.UUID, db: Session = Depends(get_db),
                 user: schema.TokenData = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id)
+    post = db.query(models.Post).filter(models.Post.id == id).first()
 
-    # if user.id != post.owner_id:
-    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Allowed Here!")
+    if user.id != post.owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Allowed Here!")
 
     if post.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -65,12 +63,12 @@ def update_post(id: uuid.UUID, post: schema.PostCreate, db: Session = Depends(ge
     post_query = db.query(models.Post).filter(models.Post.id == id)
     existing_post = post_query.first()
 
-    if user.id != existing_post.owner_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Allowed Here!")
-
     if existing_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": f"post with id: {id} was not found!"})
+
+    if user.id != existing_post.owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Allowed Here!")
 
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
