@@ -21,10 +21,11 @@ class PostRespone(BasePost):
     owner_id: uuid.UUID
     published: Optional[bool]
     id: uuid.UUID
-    owner: "UserOut"
+    # owner: "UserOut"
 
 
-class PostVote(PostRespone):
+class PostVote(BaseModel):
+    post: PostRespone
     votes: "Vote"
 
 
