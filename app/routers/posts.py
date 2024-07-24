@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", response_model=List[schema.PostVote])
 def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
                   skip: int = 0, search: Optional[str] = ""):
     posts = db.query(models.Post).all()
