@@ -26,7 +26,7 @@ class PostRespone(BasePost):
 
 class PostVote(BaseModel):
     post: PostRespone
-    votes: "Vote"
+    votes: int
 
 
 class BaseUser(BaseModel):

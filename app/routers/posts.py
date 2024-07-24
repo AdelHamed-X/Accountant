@@ -26,14 +26,17 @@ def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
         models.Post.title.contains(search)).limit(
         limit).offset(skip).all()
 
-    resp = [schema.PostVote(
-        post=schema.PostRespone.from_orm(post),
-        vote=vote
-    ) for post, vote in results]
+    resp = []
+    for result in results:
+        obj_data = {
+            "post": result[0],
+            "votes": result[1]
+        }
+        resp.append(obj_data)
 
     print(resp)
 
-    return posts
+    return resp
 
 
 @router.get("/{id}")
