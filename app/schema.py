@@ -18,14 +18,13 @@ class PostCreate(BasePost):
 
 
 class PostRespone(BasePost):
-    owner_id: uuid.UUID
+    # owner_id: uuid.UUID
     published: Optional[bool]
     id: uuid.UUID
-    # owner: "UserOut"
+    owner: "UserOut"
 
 
-class PostVote(BaseModel):
-    post: PostRespone
+class PostVote(PostRespone):
     votes: int
 
 

@@ -15,26 +15,20 @@ router = APIRouter(
 @router.get("/", response_model=List[schema.PostVote])
 def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
                   skip: int = 0, search: Optional[str] = ""):
-    posts = db.query(models.Post).all()
 
-    # results = db.query(models.Post, func.count(models.Vote.post_id).label("votes"))\
-    # .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).all()
-
-    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
-        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(
-        models.Post.id).filter(
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes"), models.User).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).join(
+        models.User, models.Post.owner_id == models.User.id).group_by(
+        models.Post.id, models.User.id).filter(
         models.Post.title.contains(search)).limit(
         limit).offset(skip).all()
 
     resp = []
     for result in results:
-        obj_data = {
-            "post": result[0],
-            "votes": result[1]
-        }
+        obj_data = result[0].__dict__.copy()
+        obj_data["votes"] = result[1]
+        obj_data["owner"] = result[2]
         resp.append(obj_data)
-
-    print(resp)
 
     return resp
 
@@ -42,6 +36,7 @@ def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
 @router.get("/{id}")
 def get_post(id: uuid.UUID, db: Session = Depends(get_db),
              user: schema.TokenData = Depends(oauth2.get_current_user)):
+
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
