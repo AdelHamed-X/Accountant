@@ -33,15 +33,24 @@ def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
     return resp
 
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=schema.PostVote)
 def get_post(id: uuid.UUID, db: Session = Depends(get_db),
              user: schema.TokenData = Depends(oauth2.get_current_user)):
+    post = db.query(models.Post, func.count(models.Vote.post_id).label('votes'), models.User).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).join(
+        models.User, models.User.id == models.Post.owner_id).filter(models.Post.id == id).group_by(
+        models.Post.id, models.User.id).first()
 
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    # post = db.query(models.Post).filter(models.Post.id == id).first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail={"message": f"post with id: {id} was not found!"})
-    return post
+
+    post_data = post[0].__dict__.copy()
+    post_data["votes"] = post[1]
+    post_data["owner"] = post[2]
+    return post_data
 
 
 @router.post('/createpost', status_code=status.HTTP_201_CREATED, response_model=schema.PostRespone)
