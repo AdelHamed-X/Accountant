@@ -3,6 +3,7 @@ from typing import List, Optional
 from .. import models, schema, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi import HTTPException, status, Response, Depends, APIRouter
 
 router = APIRouter(
@@ -11,11 +12,21 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schema.PostRespone])
+@router.get("/")
 def get_all_posts(db: Session = Depends(get_db), limit: int = 10,
                   skip: int = 0, search: Optional[str] = ""):
     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+
+    # results = db.query(models.Post, func.count(models.Vote.post_id).label("votes"))\
+    # .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).all()
+
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
+    for result in results:
+        print(result)
+
+    return results
 
 
 @router.get("/{id}")
@@ -53,7 +64,6 @@ def delete_post(id: uuid.UUID, db: Session = Depends(get_db),
                             detail={"message": f"post with id: {id} was not found!"})
     post.delete(synchronize_session=False)
     db.commit()
-
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

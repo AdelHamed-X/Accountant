@@ -24,6 +24,10 @@ class PostRespone(BasePost):
     owner: "UserOut"
 
 
+class PostVote(PostRespone):
+    votes: "Vote"
+
+
 class BaseUser(BaseModel):
     email: EmailStr
     password: str
